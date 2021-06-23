@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="kr.co.sist.examMapper">
+  <insert id="insertCpEmp1" parameterType="kr.co.sist.vo.CpEmp1VO">
+  		insert into cp_emp1(empno, ename, deptno, job, sal)values(#{empno}, #{ename}, #{deptno}, #{job}, #{sal})
+  </insert>
+  <select id = "selectEmp" resultType="kr.co.sist.domain.EmpDomain" parameterType="int">
+	  	select empno, ename, job, sal, to_char(hiredate, 'yyyy-mm-dd day') hiredate
+	  	from emp
+	  	where deptno = #{ deptno }
+  </select>
+  
+</mapper>
