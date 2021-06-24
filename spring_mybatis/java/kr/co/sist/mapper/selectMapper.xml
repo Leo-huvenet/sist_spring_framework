@@ -1,0 +1,84 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="kr.co.sist.selectMapper">
+	
+	<!-- 컬럼하나에 행 하나 조회 : 부서번호가 10번인 부서의 부서명을 조회
+		parameterType이 없으므로 Handler에서 값을 넣어주지 않는다.
+		String dname = ss.selectOne("singleColumn"); -->
+	<select id="singleColumn" resultType="String">
+		select		dname
+		from		dept
+		where		deptno = 10
+	</select>
+	
+	<!-- 컬럼 여러개에 행 하나 조회 : 부서위치가 'NEW YORK'인 부서의 부서번호, 부서명 조회 
+		Domain사용
+		DeptDomain dd = ss.selectOne("multiColumn");
+	-->
+	<select id="multiColumn" resultType="kr.co.sist.domain.DeptDomain">
+		select		deptno, dname
+		from		dept
+		where		loc = 'NEW YORK'
+	</select>
+	
+	<!-- 컬럼 하나에 행 여러개 조회 : emp테이블에서 모든 사원명 조회
+		List<String> list = ss.selectList("singleColumnMultiRow");
+	-->
+	<select id="singleColumnMultiRow" resultType="String">
+		select ename
+		from emp
+	</select>
+	
+	<!-- 조회되는 컬럼과 setter method를 미리 매핑 -->
+	<resultMap type="kr.co.sist.domain.EmpDomain" id="edResult">
+		<result column="EMPNO" property="empno"/>
+		<result column="ENAME" property="ename"/>
+		<result column="HIREDATE" property="hiredate"/>
+		<result column="SAL" property="sal"/>
+	</resultMap>
+	
+	<!-- 중복쿼리문의 작성 -->
+	<sql id="empSql">
+		select empno, ename, to_char(hiredate,'yyyy-mm-dd day') hiredate, sal
+		from  emp
+	</sql>
+	
+	<!-- 컬럼 여러개의 여러행 조회 : emp테이블에서 모든 사원의 사원번호, 사원명, 입사일,
+		연봉 조회
+		List<EmpDomain> list = ss.selectList("multiColumnMultiRow");
+		-->
+		<select id="multiColumnMultiRow" resultMap="edResult">
+			<include refid="empSql"/>
+		</select>
+		
+	<!-- 큰 값의 조회 : emp테이블에서 입력되는 연봉보다 많이 수령하는 사원의
+		사원번호, 사원명, 입사일, 연봉 조회
+		List<EmpDomain> list = ss.selectList("greaterThan", sal);
+	-->
+	
+	<!-- <select id="greaterThan" resultMap="edResult" parameterType="Integer">
+		<include refid="empSql"/>
+		 where sal &gt; #{ sal }
+	</select> -->
+	<select id="greaterThan" resultMap="edResult" parameterType="Integer">
+		<include refid="empSql"/>
+		<![CDATA[ where sal > #{ sal } ]]>  
+	</select>
+	
+	<!-- 작은 값의 조회 : emp테이블에서 입력되는 연봉보다 적게 수령하는 사원의
+		사원번호, 사원명, 입사일, 연봉 조회
+		List<EmpDomain> list = ss.selectList("greaterThan", sal);
+	-->
+	<!-- <select id="lessThan" resultMap="edResult" parameterType="Integer">
+		<include refid="empSql"/>
+		 where sal &lt; #{ sal } 
+		 order by sal
+	</select> -->
+	<select id="lessThan" resultMap="edResult" parameterType="Integer">
+		<include refid="empSql"/>
+		 <![CDATA[ where sal < #{ sal } ]]>  
+		 order by sal
+	</select>
+</mapper>

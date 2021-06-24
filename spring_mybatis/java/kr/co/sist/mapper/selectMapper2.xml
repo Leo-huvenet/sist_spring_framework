@@ -1,0 +1,169 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="kr.co.sist.selectMapper2">
+
+	<resultMap type="kr.co.sist.domain.BoardDomain" id="bdResult">
+		<result column="model" property="model"/>
+		<result column="car_year" property="car_year"/>
+		<result column="car_option" property="car_option"/>
+		<result column="hiredate" property="hiredate"/>
+	</resultMap>
+	<!-- typeAlias에 등록된 alias를 resultMap에서 사용할 수 있다. -->
+	<resultMap type="jd" id="jdResult">
+		<result column="deptno" property="deptno"/>
+		<result column="dname" property="dname"/>
+		<result column="loc" property="loc"/>
+		<result column="empno" property="empno"/>
+		<result column="name" property="name"/>
+		<result column="job" property="job"/>
+		<result column="sal" property="sal"/>
+		<result column="hiredate" property="hiredate"/>
+	</resultMap>
+	
+	<!-- 게시판 List를 구현 -->
+	<!-- 총 게시물의 수 : (검색값이 있다면 검색되는 게시물의 총 수) -->
+	<select id="selectTotalCount" resultType="Integer">
+		select count(*) cnt
+		from car_model
+	</select>
+	
+	<!-- subquery -->	
+	<select id="subquery" resultMap="bdResult" parameterType="kr.co.sist.vo.BoardVO">
+		select model, car_year, car_option, to_char(hiredate, 'yyy-mm-dd day')hiredate
+	    from (select model, car_year, car_option, hiredate,
+				row_number() over(order by hiredate desc)rnum
+				from car_model)
+	    where rnum between #{ startNum } and #{ endNum }
+	</select>
+	
+	<!-- join : 부서번호, 부서명, 위치, 사원번호, 사원명, 직무, 연봉, 입사일 조회 
+	typeAlias : config.xml에 정의하고 모든 mapper에서 같은 이름으로 클래스를 사용할 때
+	(jd는 config.xml에서 정의된 이름)-->	
+	<select id="join" resultType="jd">
+		select d.deptno, d.dname, d.loc, e.empno, e.ename, e.job, e.sal, to_char(e.hiredate, 'mm-dd-yyyy')hiredate
+		from dept d, emp e
+		where (e.deptno = d.deptno)
+	</select>
+
+	
+	<!-- subquery & join 
+		신입사원 부터 10명의 사원만 조회
+		부서번호, 부서명, 위치, 사원번호, 사원명, 직무, 연봉, 입사일 조회
+	-->
+	<select id="subquery_join" resultMap="jdResult">
+		select deptno, dname, loc, empno, ename, job, sal, to_char(hiredate, 'yyyy-mm-dd q"분기" dy')hiredate
+		from(select d.deptno, d.dname, d.loc, e.empno, e.ename, e.job, e.sal, hiredate,
+				row_number() over(order by hiredate desc) rnum
+				from dept d, emp e
+				where (e.deptno = d.deptno))
+		where rnum between 1 and 10
+	</select>	
+	
+	<!-- 테이블명 동적인 경우 
+		parameterType이 반드시 VO이어야하며 #{}이 아닌 ${} 이어야한다.		
+	-->	
+	<select id="dynamicTab" parameterType="kr.co.sist.vo.TableVO" resultType="kr.co.sist.domain.EmpDomain">
+		select empno, sal, ename, hiredate
+		from  ${ loc }
+	</select>	
+	
+	<!-- dynamic query : if, choose, foreach -->	
+		
+	<!-- if : 사원테이블에서 사원번호, 연봉, 사원명, 입사일을 조회
+		단, 매니저번호가 7698인 경우에는 7698매니저가 관리하는 사원의 정보만 조회한다. -->
+	<select id="dynamic_if" resultType="kr.co.sist.domain.EmpDomain" parameterType="kr.co.sist.vo.MgrVO">
+		select empno, sal, ename, hiredate
+		from emp
+		<where>
+			<if test="mgr eq 7698 or mgr eq 7782">
+			mgr=#{ mgr }
+			</if>
+		</where> 
+	</select>
+	
+	<!-- choose :  
+		입력값이 1번이면 10번부서 조회, 2번이면 20번 부서를 조회하고
+		그 외의 번호가 입력되면 30과 40번 부서조회
+	 -->
+	 <select id="dynamic_choose" resultType="kr.co.sist.domain.EmpDomain" parameterType="kr.co.sist.vo.DeptVO">
+	 	select empno, sal, ename, hiredate
+	 	from emp
+	 <where>
+	 	<choose>
+	 		<when test="deptno eq 1">
+	 			deptno = 10
+	 		</when> 
+	 		<when test="deptno eq 2">
+	 			deptno = 20
+	 		</when>
+	 		<otherwise>
+	 			deptno = 30 or deptno = 40
+	 		</otherwise> 
+	 	</choose>
+	 </where>
+	 </select>	
+	 
+	 <!-- trim :  -->
+	  <select id="dynamic_trim" resultType="String" parameterType="int">
+	  	select empno
+	  	from emp
+	  		<trim prefix="where">
+	  		deptno in (10,30)
+	  		<!--  when 에서 동일 값을 아래에서 한번 더 비교하면 아래 when은 타지 않는다.
+	  			값이 다르다면 비교 가능 -->
+	  		<!--  parameterType에서 입력되어 사용되는 값이 하나라면 VO가 아니여도 가능하다. -->
+	  		<choose>
+	  		<when test="flag eq 1">
+		  		<trim prefix="or" prefixOverrides="or">empno=7369</trim>	  		
+	  		</when>
+		  	<when test="flag eq 2">
+		  		<trim prefix="or" prefixOverrides="or">job='CLERK'</trim>	  		
+	  		</when>
+	  		<otherwise>
+	  			<trim prefix="or" prefixOverrides="or">or mgr=7902</trim>	  
+	  		</otherwise>
+	  		</choose>
+	  		</trim>
+	  </select>
+	  
+	  <!--  cp_emp1테이블의 레코드 변경
+	  	사원번호에 맞는 사원명, 부서번호, 직무를 변경. 단,사원명과 사원번호는 반드시 입력되며
+	  	부서번호와 직무가 입력되지 않을 수도 있다(입력된 값만 update 수행)
+	   -->
+	  <update id="dynamic_trim2" parameterType="kr.co.sist.vo.UpdateVO">
+	  	update cp_emp1 
+	  	set ename = #{ ename }
+	  	<if test="deptno neq 0">
+	  	<trim prefix="," prefixOverrides=",">deptno = #{ deptno }</trim>
+	  	</if>
+	  	<if test="job != null">
+	  	<trim prefix="," prefixOverrides=",">job = #{ job }</trim>
+	  	</if>	  	
+	  	where empno = #{ empno }
+	  </update>
+	  
+	  <!-- foreach -->
+	  <!-- array : 부서번호를 입력받아 부서번호에 해당하는 사원정보를 조회 --> 
+	  <select id="dynamic_foreach_arrary" resultType="kr.co.sist.domain.EmpDomain">
+	  	select empno, sal, ename, hiredate
+	 	from emp
+	 	where deptno in
+	 	<foreach collection="array" item="deptno" open="(" separator="," close=")">
+	 		#{ deptno }
+	 	</foreach>
+	  </select>
+	  
+	  <!-- java.util.List -->
+	  <select id="dynamic_foreach_list" resultType="kr.co.sist.domain.EmpDomain">
+	  	select empno, sal, ename, hiredate
+	 	from emp
+	 	where deptno in
+	 	<foreach collection="collection" item="deptno" open="(" separator="," close=")">
+	 		#{ deptno }
+	 	</foreach>
+	  </select>
+	  
+	  
+</mapper>

@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="kr.co.sist.examMapper">
+	<insert id="insertOne" parameterType="int">
+		insert into cp_emp1(empno) values( #{empno} )
+	</insert> 
+	<insert id="insertCpEmp1" parameterType="kr.co.sist.vo.CpEmp1VO">
+		insert into cp_emp1(empno, ename, deptno, job, sal) 
+		values( #{empno}, #{ename}, #{deptno}, #{job}, #{sal} )
+	</insert> 
+	
+	<!-- 변경 : 사원번호, 사원명, 부서번호, 직무를 입력받아 
+		사원번호에 해당하는 사원명, 부서번호, 직무, 연봉을 변경 -->
+		<update id="updateCpEmp1" parameterType="kr.co.sist.vo.CpEmp1VO">
+			update	cp_emp1
+			set			ename = #{ ename }, deptno = #{ deptno }, job = #{ job }, sal = #{ sal }
+			where 	empno = #{ empno }
+		</update>
+		
+		<select id="selectData" resultType="kr.co.sist.domain.CpEmp1Domain">
+			select empno, ename, deptno, job, sal
+			from cp_emp1
+			where empno = 7566
+		</select>
+		
+		
+		<select id="selectCpEmp2" resultType="int">
+			select empno
+			from cp_emp2
+		</select>
+		
+		<!-- 사원번호를 입력받아 cp_emp2테이블삭제 -->
+		<delete id="deleteCpEmp2" parameterType="int">
+			delete from cp_emp2 where empno = #{ empno }
+		</delete>
+		
+		
+</mapper>
