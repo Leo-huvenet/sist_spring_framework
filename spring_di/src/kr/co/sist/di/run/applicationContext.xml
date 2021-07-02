@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns:context="http://www.springframework.org/schema/context"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-4.3.xsd
+		http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context-4.3.xsd">
+	<!-- 의존성 주입 받을 객체 : Singleton으로 생성된다. -->
+	<bean id="od" class="kr.co.sist.dao.OracleDAOImpl" scope="singleton"/> <!-- singleton은 디폴트값 -->
+	<bean id="md" class="kr.co.sist.dao.MySqlDAOImpl"/>
+	
+	<!-- 의존성 주입 받을 객체생성하고 의존성 주입 -->
+	<bean id="si" class="kr.co.sist.service.ServiceImpl">
+		<constructor-arg ref="md"/> <!-- 오라클 od , mySQL md -->
+	</bean>
+	
+</beans>

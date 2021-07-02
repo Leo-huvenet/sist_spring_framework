@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns:context="http://www.springframework.org/schema/context"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-4.3.xsd
+		http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context-4.3.xsd">
+	<bean id ="od" class="kr.co.sist.dao.OracleDAOImpl" scope="singleton"/>
+	<bean id ="md" class="kr.co.sist.dao.MySqlDAOImpl" scope="singleton"/>
+	<!-- 
+		scope default value가 singleton인 이유는 
+		framework는 속도를 빠르게 하기 위해 객체를 singleton으로 만들어준다. 
+	-->
+	
+	<!-- 생성자 의존성 주입 -->
+	<bean id="ti" class="kr.co.sist.di.TestInjection">
+		<constructor-arg ref="od"/>
+	</bean>
+	
+	<!-- method의존성 주입 -->
+	<bean id="ti1" class="kr.co.sist.di.TestInjection">
+		<property name="d" ref="md"/>
+	</bean>
+	
+	<!-- 
+		기본형 데이터형 의존성 주입 
+		<value> node에 type 속성을 사용하지 않으면 문자열(String)을 매개변수로 받는
+		생성자에 의존성 주입을 수행한다.
+	-->
+	<bean id="ti2" class="kr.co.sist.di.TestInjection2">
+		<constructor-arg>
+			<value type="int">25</value>
+		</constructor-arg>
+	</bean>
+	
+	<!-- 
+		문자열을 의존성주입 받는 생성자 
+		String클래스를 사용할 떄에는 패키지명을 모두 명시하여 사용한다.
+	-->
+	<bean id="ti2_1" class="kr.co.sist.di.TestInjection2">
+		<constructor-arg>
+			<value type="java.lang.String">안녕하세요? 오늘은 금요일입니다.</value>
+		</constructor-arg>
+	</bean>
+	
+	<!-- List를 의존성 주입받는 생성자 -->
+	<bean id="ti3List" class="kr.co.sist.di.TestInjection3">
+		<constructor-arg>
+			<list>
+				<value type="java.lang.String">강인섭</value>
+				<value type="java.lang.String">유경우</value>
+				<value type="java.lang.String">진재혁</value>
+				<value type="java.lang.String">현병호</value>
+			</list>
+		</constructor-arg>
+	</bean>
+	
+	<!-- map의존성 주입 : key와 value가 <entry>로 묶인다(키와 값의 쌍을 가진다) -->
+	<bean id="ti3Map" class="kr.co.sist.di.TestInjection3">
+		<constructor-arg>
+			<map>
+				<entry>
+					<key><value type="java.lang.String">강인섭</value></key>
+					<value type="java.lang.String">서울시 강남구 역삼동</value>
+				</entry>
+				<entry>
+					<key><value type="java.lang.String">유경우</value></key>
+					<value type="java.lang.String">서울시 강남구 역삼1동</value>
+				</entry>
+				<entry>
+					<key><value type="java.lang.String">현병호</value></key>
+					<value type="java.lang.String">서울시 서초구 서초1동</value>
+				</entry>
+			</map>
+		</constructor-arg>
+	</bean>
+	
+	<!-- factory method : singleton pattern으로 구현된 class를 등록 -->
+	<bean id="fm" class="kr.co.sist.di.FactoryMethod" factory-method="getInstance"/>	
+	
+</beans>
